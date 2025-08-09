@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nari Kootam Game</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background: #1a1a1a;
+        color: #fff;
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+    }
+    h1 {
+        text-align: center;
+        color: #ff4ecb;
+    }
+    .wrapper {
+        display: flex;
+        gap: 20px;
+        max-width: 1000px;
+        width: 100%;
+    }
+    .game-container {
+        background: #2a2a2a;
+        padding: 15px;
+        border-radius: 10px;
+    }
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(4, 80px);
+        grid-template-rows: repeat(4, 80px);
+        gap: 10px;
+    }
+    .tile {
+        width: 80px;
+        height: 80px;
+        background: #3a3a3a;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    .tile img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    .sidebar {
+        background: #2a2a2a;
+        padding: 15px;
+        border-radius: 10px;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    .sidebar hr {
+        border: none;
+        border-top: 1px solid #555;
+        margin: 10px 0;
+    }
+    .controls {
+        display: none;
+        margin-top: 20px;
+        grid-template-columns: 60px 60px 60px;
+        grid-template-rows: 60px 60px 60px;
+        gap: 5px;
+        justify-content: center;
+    }
+    .controls button {
+        background: #ff4ecb;
+        border: none;
+        font-size: 22px;
+        color: white;
+        border-radius: 10px;
+        cursor: pointer;
+    }
+    .controls button:active {
+        background: #ff2fab;
+    }
+    @media (max-width: 768px) {
+        .wrapper {
+            flex-direction: column;
+            align-items: center;
+        }
+        .controls {
+            display: grid;
+        }
+    }
+</style>
+</head>
+<body>
+
+<div>
+    <h1>Nari Kootam Sexy Game</h1>
+    <div class="wrapper">
+        <!-- Game Board -->
+        <div class="game-container">
+            <div id="grid" class="grid"></div>
+            <!-- Mobile Joystick -->
+            <div class="controls">
+                <div></div>
+                <button onclick="move('up')">⬆</button>
+                <div></div>
+                <button onclick="move('left')">⬅</button>
+                <div></div>
+                <button onclick="move('right')">➡</button>
+                <div></div>
+                <button onclick="move('down')">⬇</button>
+                <div></div>
+            </div>
+        </div>
+
+        <!-- Sidebar Info -->
+        <div class="sidebar">
+            <strong>Image mapping:</strong><br>
+            2 → 2.png<br>
+            4 → 4.png<br>
+            8 → 8.png<br>
+            16 → 16.png<br>
+            32 → 32.png<br>
+            64 → 64.png<br>
+            128 → 128.png<br>
+            256 → 256.png<br>
+            512 → 512.png<br>
+            1024 → 1024.png<br>
+            2048 → 2048.png<br>
+            <hr>
+            <strong>How to play:</strong><br>
+            Merge matching tiles by sliding in any direction.<br>
+            PC → Use Arrow Keys<br>
+            Mobile → Use the joystick buttons.<br>
+            Goal → Reach 2048 (or higher!).
+        </div>
+    </div>
+</div>
+
+<script>
+const gridSize = 4;
+let grid = [];
+
+function initGame() {
+    grid = Array.from({ length: gridSize }, () => Array(gridSize).fill(0));
+    addRandomTile();
+    addRandomTile();
+    renderGrid();
+}
+
+function addRandomTile() {
+    let emptyCells = [];
+    for (let r = 0; r < gridSize; r++) {
+        for (let c = 0; c < gridSize; c++) {
+            if (grid[r][c] === 0) emptyCells.push({ r, c });
+        }
+    }
+    if (emptyCells.length === 0) return;
+    let { r, c } = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+    grid[r][c] = Math.random() < 0.9 ? 2 : 4;
+}
+
+function renderGrid() {
+    const gridContainer = document.getElementById("grid");
+    gridContainer.innerHTML = "";
+    for (let r = 0; r < gridSize; r++) {
+        for (let c = 0; c < gridSize; c++) {
+            const tile = document.createElement("div");
+            tile.classList.add("tile");
+            if (grid[r][c] !== 0) {
+                const img = document.createElement("img");
+                img.src = `images/${grid[r][c]}.png`;
+                tile.appendChild(img);
+            }
+            gridContainer.appendChild(tile);
+        }
+    }
+}
+
+function slide(row) {
+    row = row.filter(val => val !== 0);
+    for (let i = 0; i < row.length - 1; i++) {
+        if (row[i] === row[i + 1]) {
+            row[i] *= 2;
+            row[i + 1] = 0;
+        }
+    }
+    row = row.filter(val => val !== 0);
+    while (row.length < gridSize) row.push(0);
+    return row;
+}
+
+function move(direction) {
+    let rotated = false;
+    let moved = false;
+
+    if (direction === "up") {
+        for (let c = 0; c < gridSize; c++) {
+            let col = grid.map(row => row[c]);
+            let newCol = slide(col);
+            if (newCol.toString() !== col.toString()) moved = true;
+            for (let r = 0; r < gridSize; r++) grid[r][c] = newCol[r];
+        }
+    }
+    else if (direction === "down") {
+        for (let c = 0; c < gridSize; c++) {
+            let col = grid.map(row => row[c]).reverse();
+            let newCol = slide(col).reverse();
+            if (newCol.toString() !== col.reverse().toString()) moved = true;
+            for (let r = 0; r < gridSize; r++) grid[r][c] = newCol[r];
+        }
+    }
+    else if (direction === "left") {
+        for (let r = 0; r < gridSize; r++) {
+            let row = grid[r];
+            let newRow = slide(row);
+            if (newRow.toString() !== row.toString()) moved = true;
+            grid[r] = newRow;
+        }
+    }
+    else if (direction === "right") {
+        for (let r = 0; r < gridSize; r++) {
+            let row = [...grid[r]].reverse();
+            let newRow = slide(row).reverse();
+            if (newRow.toString() !== [...grid[r]].reverse().toString()) moved = true;
+            grid[r] = newRow;
+        }
+    }
+
+    if (moved) {
+        addRandomTile();
+        renderGrid();
+        checkGameOver();
+    }
+}
+
+function checkGameOver() {
+    for (let r = 0; r < gridSize; r++) {
+        for (let c = 0; c < gridSize; c++) {
+            if (grid[r][c] === 0) return;
+            if (c < gridSize - 1 && grid[r][c] === grid[r][c + 1]) return;
+            if (r < gridSize - 1 && grid[r][c] === grid[r + 1][c]) return;
+        }
+    }
+    alert("Game Over! No more moves.");
+}
+
+document.addEventListener("keydown", e => {
+    if (e.key === "ArrowUp") move("up");
+    else if (e.key === "ArrowDown") move("down");
+    else if (e.key === "ArrowLeft") move("left");
+    else if (e.key === "ArrowRight") move("right");
+});
+
+initGame();
+</script>
+
+</body>
+</html>
